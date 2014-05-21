@@ -16,7 +16,7 @@ func (r *repositorioMemoria) BuscarPorId(id string) *Url {
 }
 
 func (r *repositorioMemoria) BuscarPorUrl(url string) *Url {
-	return r.buscar(func(u *Url) bool { return u.destino == url })
+	return r.buscar(func(u *Url) bool { return u.Destino == url })
 }
 
 func (r *repositorioMemoria) Salvar(url Url) error {

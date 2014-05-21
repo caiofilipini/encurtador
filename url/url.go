@@ -20,7 +20,7 @@ type Repositorio interface {
 type Url struct {
 	Id      string
 	Criacao time.Time
-	destino string
+	Destino string
 }
 
 var repo Repositorio
