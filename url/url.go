@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	tamanho    = 5
-	caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-+"
+	tamanho  = 5
+	simbolos = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-+"
 )
 
-type Storage interface {
+type Repositorio interface {
 	IdExiste(id string) bool
 	BuscarPorId(id string) *Url
 	BuscarPorUrl(url string) *Url
@@ -23,31 +23,31 @@ type Url struct {
 	destino string
 }
 
-var storage Storage
+var repo Repositorio
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 
-	criarStorage()
+	criarRepositorio()
 }
 
 func NovaUrl(destino string) *Url {
-	if u := storage.BuscarPorUrl(destino); u != nil {
+	if u := repo.BuscarPorUrl(destino); u != nil {
 		return u
 	}
 
 	url := Url{gerarId(), time.Now(), destino}
-	storage.Salvar(url)
+	repo.Salvar(url)
 	return &url
 }
 
 func Buscar(id string) *Url {
-	return storage.BuscarPorId(id)
+	return repo.BuscarPorId(id)
 }
 
-func criarStorage() {
-	if storage == nil {
-		storage = &storageMemoria{make(map[string]*Url)}
+func criarRepositorio() {
+	if repo == nil {
+		repo = &repositorioMemoria{make(map[string]*Url)}
 	}
 }
 
@@ -55,13 +55,13 @@ func gerarId() string {
 	novoId := func() string {
 		id := make([]byte, tamanho, tamanho)
 		for i := range id {
-			id[i] = caracteres[rand.Intn(len(caracteres))]
+			id[i] = simbolos[rand.Intn(len(simbolos))]
 		}
 		return string(id)
 	}
 
 	for {
-		if id := novoId(); !storage.IdExiste(id) {
+		if id := novoId(); !repo.IdExiste(id) {
 			return id
 		}
 	}
