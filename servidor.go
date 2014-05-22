@@ -5,6 +5,7 @@ import (
 	"github.com/caiofilipini/encurtador/url"
 	"net/http"
 	"strings"
+	"os"
 )
 
 var (
@@ -13,22 +14,30 @@ var (
 )
 
 func init() {
-	dominio = "localhost"
-	porta = "8888"
+	dominio = lerConfig("DOMINIO", "localhost")
+	porta = lerConfig("PORTA", "8888")
 }
 
+type Headers map[string]string
+
 func Encurtador(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		responderCom(w, http.StatusMethodNotAllowed, Headers{"Allow": "POST"})
+		return
+	}
+
 	rawBody := make([]byte, r.ContentLength, r.ContentLength)
 	r.Body.Read(rawBody)
 	body := string(rawBody)
 
 	url := url.NovaUrl(body)
 
-	w.Header().Set("Location", fmt.Sprintf("http://%s:%s/r/%s", dominio, porta, url.Id))
-	w.WriteHeader(http.StatusCreated)
+	responderCom(w, http.StatusCreated, Headers{
+		"Location": fmt.Sprintf("http://%s:%s/r/%s", dominio, porta, url.Id),
+	})
 }
 
-func Redirecionar(w http.ResponseWriter, r *http.Request) {
+func Redirecionador(w http.ResponseWriter, r *http.Request) {
 	caminho := strings.Split(r.URL.Path, "/")
 	id := caminho[len(caminho)-1]
 
@@ -39,8 +48,22 @@ func Redirecionar(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func responderCom(w http.ResponseWriter, status int, headers Headers) {
+	for k, v := range headers {
+		w.Header().Set(k, v)
+	}
+	w.WriteHeader(status)
+}
+
+func lerConfig(config string, valorPadrao string) string {
+	if d := os.Getenv(config); d != "" {
+		return d
+	}
+	return valorPadrao
+}
+
 func main() {
-	http.HandleFunc("/r/", Redirecionar)
+	http.HandleFunc("/r/", Redirecionador)
 	http.HandleFunc("/api/encurtar", Encurtador)
 	http.ListenAndServe(":"+porta, nil)
 }
