@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/caiofilipini/encurtador/url"
 	"net/http"
-	"strings"
 	"os"
+	"strings"
 )
 
 var (
@@ -26,11 +26,12 @@ func Encurtador(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rawBody := make([]byte, r.ContentLength, r.ContentLength)
-	r.Body.Read(rawBody)
-	body := string(rawBody)
+	url, err := url.NovaUrl(extrairUrl(r))
 
-	url := url.NovaUrl(body)
+	if err != nil {
+		responderCom(w, http.StatusBadRequest, nil)
+		return
+	}
 
 	responderCom(w, http.StatusCreated, Headers{
 		"Location": fmt.Sprintf("http://%s:%s/r/%s", dominio, porta, url.Id),
@@ -60,6 +61,12 @@ func lerConfig(config string, valorPadrao string) string {
 		return d
 	}
 	return valorPadrao
+}
+
+func extrairUrl(r *http.Request) string {
+	rawBody := make([]byte, r.ContentLength, r.ContentLength)
+	r.Body.Read(rawBody)
+	return string(rawBody)
 }
 
 func main() {

@@ -2,6 +2,7 @@ package url
 
 import (
 	"math/rand"
+	"net/url"
 	"time"
 )
 
@@ -31,14 +32,18 @@ func init() {
 	criarRepositorio()
 }
 
-func NovaUrl(destino string) *Url {
+func NovaUrl(destino string) (*Url, error) {
 	if u := repo.BuscarPorUrl(destino); u != nil {
-		return u
+		return u, nil
+	}
+
+	if _, err := url.ParseRequestURI(destino); err != nil {
+		return nil, err
 	}
 
 	url := Url{gerarId(), time.Now(), destino}
 	repo.Salvar(url)
-	return &url
+	return &url, nil
 }
 
 func Buscar(id string) *Url {
