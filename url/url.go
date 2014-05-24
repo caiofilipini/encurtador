@@ -32,7 +32,7 @@ func init() {
 	criarRepositorio()
 }
 
-func NovaUrl(destino string) (*Url, error) {
+func BuscarOuCriarNovaUrl(destino string) (*Url, error) {
 	if u := repo.BuscarPorUrl(destino); u != nil {
 		return u, nil
 	}

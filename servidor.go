@@ -26,7 +26,7 @@ func Encurtador(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := url.NovaUrl(extrairUrl(r))
+	url, err := url.BuscarOuCriarNovaUrl(extrairUrl(r))
 
 	if err != nil {
 		responderCom(w, http.StatusBadRequest, nil)
