@@ -11,6 +11,7 @@ import (
 var (
 	dominio string
 	porta   string
+	ids     chan string
 )
 
 func init() {
@@ -35,15 +36,26 @@ func Encurtador(w http.ResponseWriter, r *http.Request) {
 
 	responderCom(w, http.StatusCreated, Headers{
 		"Location": fmt.Sprintf("http://%s:%s/r/%s", dominio, porta, url.Id),
+		"Link": fmt.Sprintf("<http://%s:%s/api/stats/%s>; rel=\"stats\"", dominio, porta, url.Id),
 	})
 }
 
 func Redirecionador(w http.ResponseWriter, r *http.Request) {
-	caminho := strings.Split(r.URL.Path, "/")
-	id := caminho[len(caminho)-1]
+	id := extrairId(r)
 
 	if url := url.Buscar(id); url != nil {
 		http.Redirect(w, r, url.Destino, http.StatusMovedPermanently)
+		ids <- id
+	} else {
+		http.NotFound(w, r)
+	}
+}
+
+func Coletor(w http.ResponseWriter, r *http.Request) {
+	id := extrairId(r)
+
+	if clicks := url.BuscarClicks(id); clicks > -1 {
+		fmt.Fprintf(w, "Clicks: %d", clicks)
 	} else {
 		http.NotFound(w, r)
 	}
@@ -69,8 +81,26 @@ func extrairUrl(r *http.Request) string {
 	return string(rawBody)
 }
 
+func extrairId(r *http.Request) string {
+	caminho := strings.Split(r.URL.Path, "/")
+	return caminho[len(caminho)-1]
+}
+
+func registrarEstatisticas(ids chan string) {
+	for id := range ids {
+		url.RegistrarClick(id)
+		fmt.Printf("Click registrado com sucesso para %s.\n", id)
+	}
+}
+
 func main() {
+	ids = make(chan string)
+	defer close(ids)
+	go registrarEstatisticas(ids)
+
 	http.HandleFunc("/r/", Redirecionador)
 	http.HandleFunc("/api/encurtar", Encurtador)
+	http.HandleFunc("/api/stats/", Coletor)
+
 	http.ListenAndServe(":"+porta, nil)
 }

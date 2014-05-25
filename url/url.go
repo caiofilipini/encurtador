@@ -16,6 +16,8 @@ type Repositorio interface {
 	BuscarPorId(id string) *Url
 	BuscarPorUrl(url string) *Url
 	Salvar(url Url) error
+	RegistrarClick(id string)
+	BuscarClicks(id string) int
 }
 
 type Url struct {
@@ -30,6 +32,14 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 
 	criarRepositorio()
+}
+
+func RegistrarClick(id string) {
+	repo.RegistrarClick(id)
+}
+
+func BuscarClicks(id string) int {
+	return repo.BuscarClicks(id)
 }
 
 func BuscarOuCriarNovaUrl(destino string) (*Url, error) {
@@ -52,7 +62,7 @@ func Buscar(id string) *Url {
 
 func criarRepositorio() {
 	if repo == nil {
-		repo = &repositorioMemoria{make(map[string]*Url)}
+		repo = NovoRepositorioMemoria()
 	}
 }
 
