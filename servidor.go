@@ -29,14 +29,21 @@ func Encurtador(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := url.BuscarOuCriarNovaUrl(extrairUrl(r))
+	url, nova, err := url.BuscarOuCriarNovaUrl(extrairUrl(r))
 
 	if err != nil {
 		responderCom(w, http.StatusBadRequest, nil)
 		return
 	}
 
-	responderCom(w, http.StatusCreated, Headers{
+	var status int
+	if nova {
+		status = http.StatusCreated
+	} else {
+		status = http.StatusOK
+	}
+
+	responderCom(w, status, Headers{
 		"Location": fmt.Sprintf("%s/r/%s", urlBase, url.Id),
 		"Link":     fmt.Sprintf("<%s/api/stats/%s>; rel=\"stats\"", urlBase, url.Id),
 	})

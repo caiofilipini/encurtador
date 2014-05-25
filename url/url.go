@@ -43,18 +43,18 @@ func RegistrarClick(id string) {
 	repo.RegistrarClick(id)
 }
 
-func BuscarOuCriarNovaUrl(destino string) (*Url, error) {
-	if u := repo.BuscarPorUrl(destino); u != nil {
-		return u, nil
+func BuscarOuCriarNovaUrl(destino string) (u *Url, nova bool, err error) {
+	if u = repo.BuscarPorUrl(destino); u != nil {
+		return u, false, nil
 	}
 
-	if _, err := url.ParseRequestURI(destino); err != nil {
-		return nil, err
+	if _, err = url.ParseRequestURI(destino); err != nil {
+		return nil, false, err
 	}
 
 	url := Url{gerarId(), time.Now(), destino}
 	repo.Salvar(url)
-	return &url, nil
+	return &url, true, nil
 }
 
 func Buscar(id string) *Url {
