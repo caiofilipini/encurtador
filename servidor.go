@@ -9,14 +9,15 @@ import (
 )
 
 var (
-	dominio string
 	porta   string
+	urlBase string
 	ids     chan string
 )
 
 func init() {
-	dominio = lerConfig("DOMINIO", "localhost")
+	dominio := lerConfig("DOMINIO", "localhost")
 	porta = lerConfig("PORTA", "8888")
+	urlBase = fmt.Sprintf("http://%s:%s/", dominio, porta)
 }
 
 type Headers map[string]string
@@ -35,8 +36,8 @@ func Encurtador(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responderCom(w, http.StatusCreated, Headers{
-		"Location": fmt.Sprintf("http://%s:%s/r/%s", dominio, porta, url.Id),
-		"Link": fmt.Sprintf("<http://%s:%s/api/stats/%s>; rel=\"stats\"", dominio, porta, url.Id),
+		"Location": fmt.Sprintf("%s/r/%s", urlBase, url.Id),
+		"Link":     fmt.Sprintf("<%s/api/stats/%s>; rel=\"stats\"", urlBase, url.Id),
 	})
 }
 
