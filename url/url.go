@@ -21,9 +21,14 @@ type Repositorio interface {
 }
 
 type Url struct {
-	Id      string
-	Criacao time.Time
-	Destino string
+	Id      string    `json:"id"`
+	Criacao time.Time `json:"criacao"`
+	Destino string    `json:"destino"`
+}
+
+type Stats struct {
+	Url    *Url `json:"url"`
+	Clicks int  `json:"clicks"`
 }
 
 var repo Repositorio
@@ -36,10 +41,6 @@ func init() {
 
 func RegistrarClick(id string) {
 	repo.RegistrarClick(id)
-}
-
-func BuscarClicks(id string) int {
-	return repo.BuscarClicks(id)
 }
 
 func BuscarOuCriarNovaUrl(destino string) (*Url, error) {
@@ -58,6 +59,11 @@ func BuscarOuCriarNovaUrl(destino string) (*Url, error) {
 
 func Buscar(id string) *Url {
 	return repo.BuscarPorId(id)
+}
+
+func (u *Url) Stats() *Stats {
+	clicks := repo.BuscarClicks(u.Id)
+	return &Stats{u, clicks}
 }
 
 func criarRepositorio() {

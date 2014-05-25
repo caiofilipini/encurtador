@@ -40,11 +40,5 @@ func (r *repositorioMemoria) RegistrarClick(id string) {
 }
 
 func (r *repositorioMemoria) BuscarClicks(id string) int {
-	c, encontrado := r.clicks[id]
-
-	if !encontrado {
-		return -1
-	}
-
-	return c
+	return r.clicks[id]
 }

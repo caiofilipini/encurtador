@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/caiofilipini/encurtador/url"
 	"net/http"
@@ -17,7 +18,7 @@ var (
 func init() {
 	dominio := lerConfig("DOMINIO", "localhost")
 	porta = lerConfig("PORTA", "8888")
-	urlBase = fmt.Sprintf("http://%s:%s/", dominio, porta)
+	urlBase = fmt.Sprintf("http://%s:%s", dominio, porta)
 }
 
 type Headers map[string]string
@@ -52,11 +53,18 @@ func Redirecionador(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Coletor(w http.ResponseWriter, r *http.Request) {
+func Visualizador(w http.ResponseWriter, r *http.Request) {
 	id := extrairId(r)
 
-	if clicks := url.BuscarClicks(id); clicks > -1 {
-		fmt.Fprintf(w, "Clicks: %d", clicks)
+	if url := url.Buscar(id); url != nil {
+		json, err := json.Marshal(url.Stats())
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		responderComJSON(w, string(json))
 	} else {
 		http.NotFound(w, r)
 	}
@@ -67,6 +75,11 @@ func responderCom(w http.ResponseWriter, status int, headers Headers) {
 		w.Header().Set(k, v)
 	}
 	w.WriteHeader(status)
+}
+
+func responderComJSON(w http.ResponseWriter, resposta string) {
+	responderCom(w, http.StatusOK, Headers{"Content-Type": "application/json"})
+	fmt.Fprintf(w, resposta)
 }
 
 func lerConfig(config string, valorPadrao string) string {
@@ -101,7 +114,7 @@ func main() {
 
 	http.HandleFunc("/r/", Redirecionador)
 	http.HandleFunc("/api/encurtar", Encurtador)
-	http.HandleFunc("/api/stats/", Coletor)
+	http.HandleFunc("/api/stats/", Visualizador)
 
 	http.ListenAndServe(":"+porta, nil)
 }
