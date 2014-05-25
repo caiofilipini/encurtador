@@ -43,20 +43,14 @@ func Encurtador(w http.ResponseWriter, r *http.Request) {
 }
 
 func Redirecionador(w http.ResponseWriter, r *http.Request) {
-	id := extrairId(r)
-
-	if url := url.Buscar(id); url != nil {
+	buscarUrlEExecutar(w, r, func(url *url.Url) {
 		http.Redirect(w, r, url.Destino, http.StatusMovedPermanently)
-		ids <- id
-	} else {
-		http.NotFound(w, r)
-	}
+		ids <- url.Id
+	})
 }
 
 func Visualizador(w http.ResponseWriter, r *http.Request) {
-	id := extrairId(r)
-
-	if url := url.Buscar(id); url != nil {
+	buscarUrlEExecutar(w, r, func(url *url.Url) {
 		json, err := json.Marshal(url.Stats())
 
 		if err != nil {
@@ -65,6 +59,15 @@ func Visualizador(w http.ResponseWriter, r *http.Request) {
 		}
 
 		responderComJSON(w, string(json))
+	})
+}
+
+func buscarUrlEExecutar(w http.ResponseWriter, r *http.Request, executor func(*url.Url)) {
+	caminho := strings.Split(r.URL.Path, "/")
+	id := caminho[len(caminho)-1]
+
+	if url := url.Buscar(id); url != nil {
+		executor(url)
 	} else {
 		http.NotFound(w, r)
 	}
@@ -93,11 +96,6 @@ func extrairUrl(r *http.Request) string {
 	rawBody := make([]byte, r.ContentLength, r.ContentLength)
 	r.Body.Read(rawBody)
 	return string(rawBody)
-}
-
-func extrairId(r *http.Request) string {
-	caminho := strings.Split(r.URL.Path, "/")
-	return caminho[len(caminho)-1]
 }
 
 func registrarEstatisticas(ids chan string) {
