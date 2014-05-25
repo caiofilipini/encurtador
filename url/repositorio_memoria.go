@@ -1,7 +1,7 @@
 package url
 
 type repositorioMemoria struct {
-	urls map[string]*Url
+	urls   map[string]*Url
 	clicks map[string]int
 }
 
@@ -36,16 +36,7 @@ func (r *repositorioMemoria) Salvar(url Url) error {
 }
 
 func (r *repositorioMemoria) RegistrarClick(id string) {
-	atual := 0
-
-	c, existe := r.clicks[id]
-	if existe {
-		atual = c + 1
-	} else {
-		atual = 1
-	}
-
-	r.clicks[id] = atual
+	r.clicks[id] += 1
 }
 
 func (r *repositorioMemoria) BuscarClicks(id string) int {
