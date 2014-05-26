@@ -2,22 +2,28 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/caiofilipini/encurtador/url"
+	"log"
 	"net/http"
-	"os"
 	"strings"
 )
 
 var (
-	porta   string
-	urlBase string
+	logLigado *bool
+	porta     *int
+	urlBase   string
 )
 
 func init() {
-	dominio := lerConfig("DOMINIO", "localhost")
-	porta = lerConfig("PORTA", "8888")
-	urlBase = fmt.Sprintf("http://%s:%s", dominio, porta)
+	dominio := flag.String("d", "localhost", "domínio")
+	porta = flag.Int("p", 8888, "porta")
+	logLigado = flag.Bool("l", true, "log ligado/desligado")
+
+	flag.Parse()
+
+	urlBase = fmt.Sprintf("http://%s:%d", *dominio, *porta)
 }
 
 type Headers map[string]string
@@ -53,10 +59,14 @@ func Encurtador(w http.ResponseWriter, r *http.Request) {
 		status = http.StatusOK
 	}
 
+	urlCurta := fmt.Sprintf("%s/r/%s", urlBase, url.Id)
+
 	responderCom(w, status, Headers{
-		"Location": fmt.Sprintf("%s/r/%s", urlBase, url.Id),
+		"Location": urlCurta,
 		"Link":     fmt.Sprintf("<%s/api/stats/%s>; rel=\"stats\"", urlBase, url.Id),
 	})
+
+	logar("URL %s encurtada com sucesso para %s.", url.Destino, urlCurta)
 }
 
 func Visualizador(w http.ResponseWriter, r *http.Request) {
@@ -95,11 +105,10 @@ func responderComJSON(w http.ResponseWriter, resposta string) {
 	fmt.Fprintf(w, resposta)
 }
 
-func lerConfig(config string, valorPadrao string) string {
-	if d := os.Getenv(config); d != "" {
-		return d
+func logar(formato string, valores ...interface{}) {
+	if *logLigado {
+		log.Printf(fmt.Sprintf("%s\n", formato), valores...)
 	}
-	return valorPadrao
 }
 
 func extrairUrl(r *http.Request) string {
@@ -108,10 +117,10 @@ func extrairUrl(r *http.Request) string {
 	return string(rawBody)
 }
 
-func registrarEstatisticas(ids chan string) {
-	for id := range ids {
+func registrarEstatisticas(stats chan string) {
+	for id := range stats {
 		url.RegistrarClick(id)
-		fmt.Printf("Click registrado com sucesso para %s.\n", id)
+		log.Printf("Click registrado com sucesso para %s.\n", id)
 	}
 }
 
@@ -124,5 +133,6 @@ func main() {
 	http.HandleFunc("/api/encurtar", Encurtador)
 	http.HandleFunc("/api/stats/", Visualizador)
 
-	http.ListenAndServe(":"+porta, nil)
+	logar("Iniciando servidor na porta %d...", *porta)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *porta), nil))
 }
