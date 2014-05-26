@@ -12,7 +12,6 @@ import (
 var (
 	porta   string
 	urlBase string
-	ids     chan string
 )
 
 func init() {
@@ -22,6 +21,17 @@ func init() {
 }
 
 type Headers map[string]string
+
+type Redirecionador struct {
+	stats chan string
+}
+
+func (r *Redirecionador) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	buscarUrlEExecutar(w, req, func(url *url.Url) {
+		http.Redirect(w, req, url.Destino, http.StatusMovedPermanently)
+		r.stats <- url.Id
+	})
+}
 
 func Encurtador(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -46,13 +56,6 @@ func Encurtador(w http.ResponseWriter, r *http.Request) {
 	responderCom(w, status, Headers{
 		"Location": fmt.Sprintf("%s/r/%s", urlBase, url.Id),
 		"Link":     fmt.Sprintf("<%s/api/stats/%s>; rel=\"stats\"", urlBase, url.Id),
-	})
-}
-
-func Redirecionador(w http.ResponseWriter, r *http.Request) {
-	buscarUrlEExecutar(w, r, func(url *url.Url) {
-		http.Redirect(w, r, url.Destino, http.StatusMovedPermanently)
-		ids <- url.Id
 	})
 }
 
@@ -113,11 +116,11 @@ func registrarEstatisticas(ids chan string) {
 }
 
 func main() {
-	ids = make(chan string)
-	defer close(ids)
-	go registrarEstatisticas(ids)
+	stats := make(chan string)
+	defer close(stats)
+	go registrarEstatisticas(stats)
 
-	http.HandleFunc("/r/", Redirecionador)
+	http.Handle("/r/", &Redirecionador{stats})
 	http.HandleFunc("/api/encurtar", Encurtador)
 	http.HandleFunc("/api/stats/", Visualizador)
 
