@@ -105,12 +105,6 @@ func responderComJSON(w http.ResponseWriter, resposta string) {
 	fmt.Fprintf(w, resposta)
 }
 
-func logar(formato string, valores ...interface{}) {
-	if *logLigado {
-		log.Printf(fmt.Sprintf("%s\n", formato), valores...)
-	}
-}
-
 func extrairUrl(r *http.Request) string {
 	rawBody := make([]byte, r.ContentLength, r.ContentLength)
 	r.Body.Read(rawBody)
@@ -120,7 +114,13 @@ func extrairUrl(r *http.Request) string {
 func registrarEstatisticas(stats chan string) {
 	for id := range stats {
 		url.RegistrarClick(id)
-		log.Printf("Click registrado com sucesso para %s.\n", id)
+		logar("Click registrado com sucesso para %s.\n", id)
+	}
+}
+
+func logar(formato string, valores ...interface{}) {
+	if *logLigado {
+		log.Printf(fmt.Sprintf("%s\n", formato), valores...)
 	}
 }
 
