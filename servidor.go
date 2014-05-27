@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/caiofilipini/encurtador/url"
+	"github.com/garyburd/redigo/redis"
 )
 
 var (
@@ -126,7 +127,13 @@ func logar(formato string, valores ...interface{}) {
 }
 
 func main() {
-	url.ConfigurarRepositorio(url.NovoRepositorioMemoria())
+	conn, err := redis.Dial("tcp", "127.0.0.1:6379")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	url.ConfigurarRepositorio(&url.RepositorioRedis{conn})
 
 	stats := make(chan string)
 	defer close(stats)
