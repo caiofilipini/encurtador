@@ -133,7 +133,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	url.ConfigurarRepositorio(&url.RepositorioRedis{conn})
+	url.ConfigurarRepositorio(url.NovoRepositorioRedis(conn))
 
 	stats := make(chan string)
 	defer close(stats)

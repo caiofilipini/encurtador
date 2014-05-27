@@ -8,21 +8,21 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-type RepositorioRedis struct {
-	Conn redis.Conn
+type repositorioRedis struct {
+	conn redis.Conn
 }
 
-func NovoRepositorioRedis(c redis.Conn) *RepositorioRedis {
-	return &RepositorioRedis{c}
+func NovoRepositorioRedis(c redis.Conn) *repositorioRedis {
+	return &repositorioRedis{c}
 }
 
-func (r *RepositorioRedis) IdExiste(id string) bool {
-	existe, err := redis.Bool(r.Conn.Do("EXISTS", chave(id)))
+func (r *repositorioRedis) IdExiste(id string) bool {
+	existe, err := redis.Bool(r.conn.Do("EXISTS", chave(id)))
 	tratar(err)
 	return existe
 }
 
-func (r *RepositorioRedis) BuscarPorId(id string) *Url {
+func (r *repositorioRedis) BuscarPorId(id string) *Url {
 	if res := r.get(chave(id)); res != nil {
 		b, err := redis.Bytes(res, nil)
 		tratar(err)
@@ -36,7 +36,7 @@ func (r *RepositorioRedis) BuscarPorId(id string) *Url {
 	return nil
 }
 
-func (r *RepositorioRedis) BuscarPorUrl(url string) *Url {
+func (r *repositorioRedis) BuscarPorUrl(url string) *Url {
 	if s := r.get(urls(url)); s != nil {
 		id, err := redis.String(s, nil)
 		tratar(err)
@@ -46,30 +46,30 @@ func (r *RepositorioRedis) BuscarPorUrl(url string) *Url {
 	return nil
 }
 
-func (r *RepositorioRedis) Salvar(url Url) error {
+func (r *repositorioRedis) Salvar(url Url) error {
 	json, err := json.Marshal(url)
 	tratar(err)
 
-	r.Conn.Send("MULTI")
-	r.Conn.Send("SET", chave(url.Id), string(json))
-	r.Conn.Send("SET", urls(url.Destino), url.Id)
-	_, err = r.Conn.Do("EXEC")
+	r.conn.Send("MULTI")
+	r.conn.Send("SET", chave(url.Id), string(json))
+	r.conn.Send("SET", urls(url.Destino), url.Id)
+	_, err = r.conn.Do("EXEC")
 	return err
 }
 
-func (r *RepositorioRedis) RegistrarClick(id string) {
-	_, err := r.Conn.Do("INCR", clicks(id))
+func (r *repositorioRedis) RegistrarClick(id string) {
+	_, err := r.conn.Do("INCR", clicks(id))
 	tratar(err)
 }
 
-func (r *RepositorioRedis) BuscarClicks(id string) int {
-	c, err := redis.Int(r.Conn.Do("GET", clicks(id)))
+func (r *repositorioRedis) BuscarClicks(id string) int {
+	c, err := redis.Int(r.conn.Do("GET", clicks(id)))
 	tratar(err)
 	return c
 }
 
-func (r *RepositorioRedis) get(chave string) interface{} {
-	res, err := r.Conn.Do("GET", chave)
+func (r *repositorioRedis) get(chave string) interface{} {
+	res, err := r.conn.Do("GET", chave)
 	tratar(err)
 	return res
 }
