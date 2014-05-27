@@ -114,7 +114,7 @@ func extrairUrl(r *http.Request) string {
 func registrarEstatisticas(stats chan string) {
 	for id := range stats {
 		url.RegistrarClick(id)
-		logar("Click registrado com sucesso para %s.\n", id)
+		logar("Click registrado com sucesso para %s.", id)
 	}
 }
 
