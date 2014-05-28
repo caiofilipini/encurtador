@@ -35,8 +35,10 @@ var repo Repositorio
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
+}
 
-	criarRepositorio()
+func ConfigurarRepositorio(r Repositorio) {
+	repo = r
 }
 
 func RegistrarClick(id string) {
@@ -64,12 +66,6 @@ func Buscar(id string) *Url {
 func (u *Url) Stats() *Stats {
 	clicks := repo.BuscarClicks(u.Id)
 	return &Stats{u, clicks}
-}
-
-func criarRepositorio() {
-	if repo == nil {
-		repo = NovoRepositorioMemoria()
-	}
 }
 
 func gerarId() string {

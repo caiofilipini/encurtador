@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/caiofilipini/encurtador/url"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/caiofilipini/encurtador/url"
 )
 
 var (
@@ -125,6 +126,8 @@ func logar(formato string, valores ...interface{}) {
 }
 
 func main() {
+	url.ConfigurarRepositorio(url.NovoRepositorioMemoria())
+
 	stats := make(chan string)
 	defer close(stats)
 	go registrarEstatisticas(stats)
